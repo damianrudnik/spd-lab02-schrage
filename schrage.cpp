@@ -5,16 +5,25 @@
 #include <cctype>
 #include <cstring>
 #include <new>
+#include <vector>
+#include <ctime>
 
+double t;
 using namespace std;
 
 int iIndexZadan = 0;
 
 struct Zadanie {
-        int kolejnosc;//kolejnosc zadania
-        int r;//czas przygotowania
-        int p;//czas na maszynie
-        int q;//czas stygniecia
+    int kolejnosc;//kolejnosc zadania
+    int r;//czas przygotowania
+    int p;//czas na maszynie
+    int q;//czas stygniecia
+    /*Dodaj(int kolejnosc,int r,int p,int q){
+        this->kolejnosc = kolejnosc;
+        this->r=r;
+        this->p=p;
+        this->q=q;
+    }*/
 };
 //Zadanie TabZadan[1001]; //deklaracja tablicy zadan
 //int kolejnosc[1001];
@@ -42,7 +51,7 @@ ostream& operator<< (ostream& wyjscie, const Zadanie& zad){
 // sortowanie przez kopcowanie tablicy zadan z wyborem 1-r, 2-p, 3-q
 void heapsort(Zadanie arr[], unsigned int N, int rpq){ //http://www.codecodex.com/wiki/Heapsort#C.2B.2B
     unsigned int n = N, i = n/2, parent, child;  
-    Zadanie t;  
+    Zadanie t;
     
     for (;;) { /* Loops until arr is sorted */  
         if (i > 0) { /* First stage - Sorting the heap */  
@@ -108,12 +117,49 @@ void heapsort(Zadanie arr[], unsigned int N, int rpq){ //http://www.codecodex.co
         arr[parent] = t; /* We save t in the heap */  
     }  
 }
+void swap(Zadanie *x,  Zadanie *y)  { Zadanie z;  z=*x; *x=*y; *y=z; }
+void check(int m, Zadanie TabG[]){
+    int k = m/2;
+    if (k){
+        if(TabG[k].q < TabG[m].q){
+            swap(TabG[k],TabG[m]);
+            check(k,TabG);
+        }
+    }
+}
+void sleave(int i, int m, Zadanie TabG[]){
+    int k=i<<1,u;
+    if (k > m) return;
+    u=((k < m) && (TabG[k].q < TabG[k+1].q))?(k+1):k;
+    if (TabG[u].q>TabG[i].q){
+        swap(TabG[u],TabG[i]);
+        sleave(u, m, TabG);
+    }
+}
 
 void fdr(Zadanie Tab[], int arr[], unsigned int rozmiar){
-    heapsort(Tab,rozmiar,1);
+    heapsort(Tab,rozmiar,1);//wstepne sortowanie po r
+    Zadanie *TabG = new Zadanie[rozmiar];//talica zadan gotowych
+    int t=0,k=0,cmaks=0;
+    int e=2, m=1;
+    Zadanie j;
+    while(m||(e<=rozmiar)){
+        while(e<=rozmiar){
+            if ( Tab[e].r<=t){
+                TabG[++m] = TabG[e++];
+                check(m,TabG);
+            }else break;
+            if (m){
+                j=TabG[1];
+                Tab[++k] = j;
+                t+=Tab[j].p;
+                _c[j]=t;
 
-    /*int t=0,k=0,cmaks=0;
-    Zadanie G[100]; //deklaracja tablicy gotowych zadan
+            }
+        }
+    }
+
+    /*
     while() {
         while( && Tab[j].r <= t){
             e = Tab[j].r;
@@ -122,9 +168,19 @@ void fdr(Zadanie Tab[], int arr[], unsigned int rozmiar){
     }
     */
     for (unsigned int i = 0; i < rozmiar; i++){
-        arr[i] = Tab[i].kolejnosc;
+        arr[i] = TabG[i].kolejnosc;
     }
+    delete[] TabG;
 
+}
+
+void intime(){ 
+  t=clock();
+}
+
+void showtime(){ 
+  t=clock()-t; 
+  cout <<"\nWszystkie operacje zajely: " << ((double)t)/CLOCKS_PER_SEC << " s.\n\n";
 }
 
 string itos(int a) {
@@ -141,7 +197,8 @@ int main(){
     string line, filename;
 
     cout<<"Generuje odpowiedzi dla wszystkich plikow.\n###############################################\n\n";
-    
+    intime();
+
     for (int iNrPliku = 1; iNrPliku<=9;iNrPliku++){ // odczyt, szeregowanie i zapis wyniku do plikow
         filename = itos(iNrPliku);
         ifstream myfile ("SCHRAGE"+filename+".DAT");
@@ -207,5 +264,6 @@ int main(){
         delete[] TabZadan;
         iIndexZadan =0, index=0;
     }
+    showtime();
     return 0;
 }

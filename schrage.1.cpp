@@ -7,72 +7,47 @@
 #include <new>
 #include <vector>
 #include <ctime>
-#include <queue>
 
-double t;// czas wykonywania algorytmu 
+double t;
 using namespace std;
+
+int iIndexZadan = 0;
 
 struct Zadanie {
     int kolejnosc;//kolejnosc zadania
     int r;//czas przygotowania
     int p;//czas na maszynie
     int q;//czas stygniecia
+    /*Dodaj(int kolejnosc,int r,int p,int q){
+        this->kolejnosc = kolejnosc;
+        this->r=r;
+        this->p=p;
+        this->q=q;
+    }*/
 };
-
-struct PorownajZadania{
-    bool operator ()( const Zadanie & Zadanie1, const Zadanie & Zadanie2 ) {
-        //kolejność - rosnąco
-        if( Zadanie1.r > Zadanie2.r ) return true;
-        if( Zadanie1.r < Zadanie2.r ) return false;
-        if( Zadanie1.q < Zadanie2.q ) return true;
-        if( Zadanie1.q > Zadanie2.q ) return false;
-        return false;
-    }
-};
-
-typedef priority_queue < Zadanie, std::vector < Zadanie >, PorownajZadania > KolejkaZadan;
-
-void WstawZadanie( KolejkaZadan & kp, int kolejnosc, int r, int p, int q){
-    Zadanie NoweZadanie;
-    NoweZadanie.kolejnosc = kolejnosc;
-    NoweZadanie.r = r;
-    NoweZadanie.p = p;
-    NoweZadanie.q = q;
-    kp.push( NoweZadanie );
-}
-
-void WyswietlKolejke(KolejkaZadan kp) {
-    while(kp.size() > 0){
-        Zadanie odczytane = kp.top();
-        kp.pop();
-        cout << odczytane.kolejnosc << " "; 
-    }
-    cout << '\n';
-}
+//Zadanie TabZadan[1001]; //deklaracja tablicy zadan
+//int kolejnosc[1001];
 
 unsigned int max(unsigned int x, unsigned int y){ return (x<=y)?y:x; }
 unsigned int min(unsigned int x, unsigned int y){ return (x<=y)?x:y; }
-
-/*istream& operator>> (istream& wejscie, Zadanie& zad){
-    zad.kolejnosc = ++iIndexZadan;
-    wejscie >> zad.r >> zad.p >> zad.q;
-    return wejscie;
-}*/
-ostream& operator<< (ostream& wyjscie, const Zadanie& zad){
-    cout << zad. kolejnosc << ": " << zad.r << " - " << zad.p << " - " << zad.q << endl; 
-    return wyjscie;
-}
-int cmax(KolejkaZadan & kp){
-    unsigned int t=0,u=0;
-    while (!kp.empty()){
-        cout<<kp.top();
-        t=max(t,kp.top().r)+kp.top().p;
-        u=max(u,t+kp.top().q);
-        kp.pop();
+int cmax(Zadanie Tab[], unsigned int rozmiar){
+    unsigned int i, t=0,u=0;
+    for (i=0;i<rozmiar;i++){
+        t=max(t,Tab[i].r)+Tab[i].p;
+        u=max(u,t+Tab[i].q);
     }
     return u;
 }
 
+istream& operator>> (istream& wejscie, Zadanie& zad){
+    zad.kolejnosc = ++iIndexZadan;
+    wejscie >> zad.r >> zad.p >> zad.q;
+    return wejscie;
+}
+ostream& operator<< (ostream& wyjscie, const Zadanie& zad){
+    cout << zad.r << " - " << zad.p << " - " << zad.q << endl; 
+    return wyjscie;
+}
 // sortowanie przez kopcowanie tablicy zadan z wyborem 1-r, 2-p, 3-q
 void heapsort(Zadanie arr[], unsigned int N, int rpq){ //http://www.codecodex.com/wiki/Heapsort#C.2B.2B
     unsigned int n = N, i = n/2, parent, child;  
@@ -162,10 +137,10 @@ void sleave(int i, int m, Zadanie TabG[]){
     }
 }
 
-void fdr(KolejkaZadan & kp){
-    //heapsort(Tab,rozmiar,1);//wstepne sortowanie po r
-    //Zadanie *TabG = new Zadanie[rozmiar];//talica zadan gotowych
-    /*int t=0,k=0,cmaks=0;
+void fdr(Zadanie Tab[], int arr[], unsigned int rozmiar){
+    heapsort(Tab,rozmiar,1);//wstepne sortowanie po r
+    Zadanie *TabG = new Zadanie[rozmiar];//talica zadan gotowych
+    int t=0,k=0,cmaks=0;
     int e=2, m=1;
     Zadanie j;
     while(m||(e<=rozmiar)){
@@ -184,7 +159,7 @@ void fdr(KolejkaZadan & kp){
         }
     }
 
-    
+    /*
     while() {
         while( && Tab[j].r <= t){
             e = Tab[j].r;
@@ -192,10 +167,10 @@ void fdr(KolejkaZadan & kp){
         }
     }
     */
-    /*for (unsigned int i = 0; i < rozmiar; i++){
-        arr[i] = Tab[i].kolejnosc;
-    }*/
-    //delete[] TabG;
+    for (unsigned int i = 0; i < rozmiar; i++){
+        arr[i] = TabG[i].kolejnosc;
+    }
+    delete[] TabG;
 
 }
 
@@ -216,45 +191,60 @@ string itos(int a) {
 }
 
 int main(){
-    unsigned int LiczbaZadan = 0;
-    string filename;
-    int tab[9] = {32,687,1299,1399,3487,3659,6918,6936,72853};
+    
+    unsigned int LiczbaZadan = 0, index = 0;
+    bool xFirst=1;
+    string line, filename;
 
     cout<<"Generuje odpowiedzi dla wszystkich plikow.\n###############################################\n\n";
     intime();
 
-    for (int iNrPliku = 1; iNrPliku<=1;iNrPliku++){ // odczyt, szeregowanie i zapis wyniku do plikow
-
-        KolejkaZadan Kolejka;
-        Zadanie Zad;
+    for (int iNrPliku = 1; iNrPliku<=9;iNrPliku++){ // odczyt, szeregowanie i zapis wyniku do plikow
         filename = itos(iNrPliku);
         ifstream myfile ("SCHRAGE"+filename+".DAT");
         cout << "Odczytuje plik SZCHRAGE"+filename+".DAT\n";
-
+        xFirst=1;
+        int idx =0;
         if (myfile.is_open()){
-            myfile>>LiczbaZadan;
-            for (unsigned int i = 0; i < LiczbaZadan; i++){
-                myfile>>Zad.r;
-                myfile>>Zad.p;
-                myfile>>Zad.q;
-                Zad.kolejnosc = i+1;
-                //cout << Zad;
-                WstawZadanie(Kolejka, Zad.kolejnosc, Zad.r, Zad.p, Zad.q);
-            }
+            getline (myfile,line);
+            istringstream dane(line);
+            dane >> LiczbaZadan;
+            cout << "  Liczba zadan: " << LiczbaZadan<<"\n";
             myfile.close();
-        }else cout << "Nie moge otworzyc pliku";
-       
+        }else cout << "Unable to open file1";
+
+        int *kolejnosc = new int[LiczbaZadan];
+        Zadanie *TabZadan = new Zadanie[LiczbaZadan];
+
+        ifstream myfile2 ("SCHRAGE"+filename+".DAT");
+        if (myfile2.is_open()){
+            while (getline (myfile2,line) ){
+                istringstream dane2(line);
+                if (xFirst==1){
+                    xFirst = 0;
+                }else{
+                    ++idx;
+                    dane2 >> TabZadan[index]; //wgranie danych do tablicy struktur
+                    //cout <<"   " << idx<<": "<<TabZadan[index]; //wyswietlenie danych
+                    index++;
+                }
+            }   
+            cout << "  Odczytano plik z danymi.\n";
+            myfile2.close();
+        }else cout << "Unable to open file2"; 
         // obsluga algorytmu, czyli petle zamieniajace kolejnosc dzialan
         cout<<"  Obliczanie kolejnosci. \n";
-        //fdr(TabZadan, kolejnosc, LiczbaZadan);
+        fdr(TabZadan, kolejnosc, LiczbaZadan);
         
         // wyswietlenie kolejnosci:
         cout << endl << "Wyliczona kolejnosc: ";
-        WyswietlKolejke(Kolejka);
-        int cm = cmax(Kolejka);
-        
-        cout << endl << "Czas Cmax: " << cm << endl;
-
+        for (unsigned int i = 0; i < LiczbaZadan; i++){
+            //cout << TabZadan[i];
+            cout << kolejnosc[i] << " ";
+        }
+        cout << endl << "Obliczanie Cmax: ";
+        int cm = cmax(TabZadan,LiczbaZadan);
+        cout << cm << endl;
         // zapis do pliku
         string fname = "out";
         fname.append(filename);
@@ -269,6 +259,10 @@ int main(){
             return -1;
         }
         cout<<"###############################################\n\n";
+
+        delete[] kolejnosc;
+        delete[] TabZadan;
+        iIndexZadan =0, index=0;
     }
     showtime();
     return 0;

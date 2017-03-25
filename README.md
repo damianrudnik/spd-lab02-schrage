@@ -1,5 +1,4 @@
-# spd-lab02-schrage
-Schrage's Algorithm
+# Wymagania do zadania
 
 Format pliku z danymi : Pierwsza linia zawiera liczbę calkowitą n oznaczającą liczbę zadań. Każda z następnych n linii zawiera 3 liczby (r, p i q) oznaczajace kolejno r - termin dostępności, p - czas obsługi q - czas dostarczenia zadania.
 
@@ -16,3 +15,8 @@ Plik z danymi
 
 Plik z wynikami
 32
+
+# O Algorytmie Schrage
+Algorytm polega na uszeregowaniu zadań najpierw wg. czasu dostarczenia r.
+W chwili t, gdy mamy dostępne zadania i czas na maszynie, wtedy ściągamy wszystkie dostępne zadania z kolejki priorytetowej sortującej po r, a wstawiamy je do kolejki sortującej po czasie stygnięcia q i wykonujemy zadanie o najdłuższym czasie stynięcia z tej kolejki.
+

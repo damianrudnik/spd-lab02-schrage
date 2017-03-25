@@ -19,18 +19,28 @@ struct Zadanie {
     int q;//czas stygniecia
 };
 
-struct PorownajZadania{
+struct PorownajZadaniaR{
     bool operator ()( const Zadanie & Zadanie1, const Zadanie & Zadanie2 ) {
         //kolejność - rosnąco
         if( Zadanie1.r > Zadanie2.r ) return true;
         if( Zadanie1.r < Zadanie2.r ) return false;
-        if( Zadanie1.q < Zadanie2.q ) return true;
         if( Zadanie1.q > Zadanie2.q ) return false;
+        if( Zadanie1.q < Zadanie2.q ) return true;
         return false;
     }
 };
 
-typedef priority_queue < Zadanie, std::vector < Zadanie >, PorownajZadania > KolejkaZadan;
+struct PorownajZadaniaQ{
+    bool operator ()( const Zadanie & Zadanie1, const Zadanie & Zadanie2 ) {
+        //kolejność - malejaco
+        if( Zadanie1.q > Zadanie2.q ) return false;
+        if( Zadanie1.q < Zadanie2.q ) return true;
+        return false;
+    }
+};
+
+typedef priority_queue < Zadanie, std::vector < Zadanie >, PorownajZadaniaR > KolejkaZadan;
+typedef priority_queue < Zadanie, std::vector < Zadanie >, PorownajZadaniaQ > KolejkaZadanQ;
 
 void WstawZadanie( KolejkaZadan & kp, int kolejnosc, int r, int p, int q){
     Zadanie NoweZadanie;
@@ -40,8 +50,29 @@ void WstawZadanie( KolejkaZadan & kp, int kolejnosc, int r, int p, int q){
     NoweZadanie.q = q;
     kp.push( NoweZadanie );
 }
+void WstawZadanie( KolejkaZadanQ & kp, int kolejnosc, int r, int p, int q){
+    Zadanie NoweZadanie;
+    NoweZadanie.kolejnosc = kolejnosc;
+    NoweZadanie.r = r;
+    NoweZadanie.p = p;
+    NoweZadanie.q = q;
+    kp.push( NoweZadanie );
+}
+
+ostream& operator<< (ostream& wyjscie, const Zadanie& zad){
+    cout << zad. kolejnosc << ": " << zad.r << " - " << zad.p << " - " << zad.q << endl; 
+    return wyjscie;
+}
 
 void WyswietlKolejke(KolejkaZadan kp) {
+    while(kp.size() > 0){
+        Zadanie odczytane = kp.top();
+        kp.pop();
+        cout << odczytane.kolejnosc << " "; 
+    }
+    cout << '\n';
+}
+void WyswietlKolejke(KolejkaZadanQ kp) {
     while(kp.size() > 0){
         Zadanie odczytane = kp.top();
         kp.pop();
@@ -58,145 +89,47 @@ unsigned int min(unsigned int x, unsigned int y){ return (x<=y)?x:y; }
     wejscie >> zad.r >> zad.p >> zad.q;
     return wejscie;
 }*/
-ostream& operator<< (ostream& wyjscie, const Zadanie& zad){
-    cout << zad. kolejnosc << ": " << zad.r << " - " << zad.p << " - " << zad.q << endl; 
-    return wyjscie;
-}
 int cmax(KolejkaZadan & kp){
     unsigned int t=0,u=0;
     while (!kp.empty()){
-        cout<<kp.top();
         t=max(t,kp.top().r)+kp.top().p;
         u=max(u,t+kp.top().q);
         kp.pop();
     }
     return u;
 }
-
-// sortowanie przez kopcowanie tablicy zadan z wyborem 1-r, 2-p, 3-q
-void heapsort(Zadanie arr[], unsigned int N, int rpq){ //http://www.codecodex.com/wiki/Heapsort#C.2B.2B
-    unsigned int n = N, i = n/2, parent, child;  
-    Zadanie t;
-    
-    for (;;) { /* Loops until arr is sorted */  
-        if (i > 0) { /* First stage - Sorting the heap */  
-            i--;           /* Save its index to i */  
-            t = arr[i];    /* Save parent value to t */  
-        } else {     /* Second stage - Extracting elements in-place */  
-            n--;           /* Make the new heap smaller */  
-            if (n == 0) return; /* When the heap is empty, we are done */  
-            t = arr[n];    /* Save last value (it will be overwritten) */  
-            arr[n] = arr[0]; /* Save largest value at the end of arr */  
-        }  
-    
-        parent = i; /* We will start pushing down t from parent */  
-        child = i*2 + 1; /* parent's left child */  
-    
-        /* Shift operation - pushing the value of t down the heap */  
-        while (child < n) { 
-            if (rpq==1){
-                if (child + 1 < n  &&  arr[child + 1].r > arr[child].r) {  
-                    child++; /* Choose the largest child */  
-                } 
-            }else if (rpq == 2){
-                if (child + 1 < n  &&  arr[child + 1].p > arr[child].p) {  
-                    child++; /* Choose the largest child */  
-                }
-            }else if (rpq == 3){
-                if (child + 1 < n  &&  arr[child + 1].q > arr[child].q) {  
-                    child++; /* Choose the largest child */  
-                }
-            }
-            //if (child + 1 < n  &&  arr[child + 1] > arr[child]) {  
-            //    child++; /* Choose the largest child */  
-            //}  
-            if (rpq==1){
-                if (arr[child].r > t.r) { /* If any child is bigger than the parent */  
-                    arr[parent] = arr[child]; /* Move the largest child up */  
-                    parent = child; /* Move parent pointer to this child */  
-                    //child = parent*2-1; /* Find the next child */  
-                    child = parent*2+1; /* the previous line is wrong*/  
-                } else {  
-                    break; /* t's place is found */  
-                }
-            }else if (rpq == 2){
-                if (arr[child].p > t.p) { /* If any child is bigger than the parent */  
-                    arr[parent] = arr[child]; /* Move the largest child up */  
-                    parent = child; /* Move parent pointer to this child */  
-                    //child = parent*2-1; /* Find the next child */  
-                    child = parent*2+1; /* the previous line is wrong*/  
-                } else {  
-                    break; /* t's place is found */  
-                } 
-            }else if (rpq == 3){
-                if (arr[child].q > t.q) { /* If any child is bigger than the parent */  
-                    arr[parent] = arr[child]; /* Move the largest child up */  
-                    parent = child; /* Move parent pointer to this child */  
-                    //child = parent*2-1; /* Find the next child */  
-                    child = parent*2+1; /* the previous line is wrong*/  
-                } else {  
-                    break; /* t's place is found */  
-                } 
-            }
-        }  
-        arr[parent] = t; /* We save t in the heap */  
-    }  
-}
-void swap(Zadanie *x,  Zadanie *y)  { Zadanie z;  z=*x; *x=*y; *y=z; }
-void check(int m, Zadanie TabG[]){
-    int k = m/2;
-    if (k){
-        if(TabG[k].q < TabG[m].q){
-            swap(TabG[k],TabG[m]);
-            check(k,TabG);
-        }
+int cmaxtab(Zadanie Tab[], unsigned int rozmiar){
+    unsigned int i, t=0,u=0;
+    for (i=0;i<rozmiar;i++){
+        t=max(t,Tab[i].r)+Tab[i].p;
+        u=max(u,t+Tab[i].q);
     }
-}
-void sleave(int i, int m, Zadanie TabG[]){
-    int k=i<<1,u;
-    if (k > m) return;
-    u=((k < m) && (TabG[k].q < TabG[k+1].q))?(k+1):k;
-    if (TabG[u].q>TabG[i].q){
-        swap(TabG[u],TabG[i]);
-        sleave(u, m, TabG);
-    }
+    return u;
 }
 
-void fdr(KolejkaZadan & kp){
-    //heapsort(Tab,rozmiar,1);//wstepne sortowanie po r
-    //Zadanie *TabG = new Zadanie[rozmiar];//talica zadan gotowych
-    /*int t=0,k=0,cmaks=0;
-    int e=2, m=1;
-    Zadanie j;
-    while(m||(e<=rozmiar)){
-        while(e<=rozmiar){
-            if ( Tab[e].r<=t){
-                TabG[++m] = TabG[e++];
-                check(m,TabG);
-            }else break;
-            if (m){
-                j=TabG[1];
-                Tab[++k] = j;
-                t+=Tab[j].p;
-                _c[j]=t;
-
-            }
+void fdr(KolejkaZadan kp, Zadanie *tab){
+    int t=0,k=0, cmax=0;
+    KolejkaZadanQ kg;
+    Zadanie e;
+    while(!kp.empty() || !kg.empty()){
+        while((!kp.empty()) && (kp.top().r <= t)){
+            e = kp.top();
+            kp.pop();
+            kg.push(e);  
+        }
+        if (kg.empty()){
+            t = kp.top().r;
+        }else{
+            e = kg.top();
+            kg.pop();
+            tab[k]=e;
+            k++;
+            t=t+e.p;
+            //cout << " t2: "<<t << "\t" ;
+            cmax=max(cmax,t+e.q);
         }
     }
-
-    
-    while() {
-        while( && Tab[j].r <= t){
-            e = Tab[j].r;
-            
-        }
-    }
-    */
-    /*for (unsigned int i = 0; i < rozmiar; i++){
-        arr[i] = Tab[i].kolejnosc;
-    }*/
-    //delete[] TabG;
-
+    //cout << "\n CZAS OBLICZONY:" << cmax << endl;
 }
 
 void intime(){ 
@@ -218,12 +151,12 @@ string itos(int a) {
 int main(){
     unsigned int LiczbaZadan = 0;
     string filename;
-    int tab[9] = {32,687,1299,1399,3487,3659,6918,6936,72853};
+    int tablica[9] = {32,687,1299,1399,3487,3659,6918,6936,72853};
 
     cout<<"Generuje odpowiedzi dla wszystkich plikow.\n###############################################\n\n";
     intime();
 
-    for (int iNrPliku = 1; iNrPliku<=1;iNrPliku++){ // odczyt, szeregowanie i zapis wyniku do plikow
+    for (int iNrPliku = 1; iNrPliku<=9;iNrPliku++){ // odczyt, szeregowanie i zapis wyniku do plikow
 
         KolejkaZadan Kolejka;
         Zadanie Zad;
@@ -238,22 +171,26 @@ int main(){
                 myfile>>Zad.p;
                 myfile>>Zad.q;
                 Zad.kolejnosc = i+1;
-                //cout << Zad;
-                WstawZadanie(Kolejka, Zad.kolejnosc, Zad.r, Zad.p, Zad.q);
+                Kolejka.push(Zad);
             }
             myfile.close();
         }else cout << "Nie moge otworzyc pliku";
        
         // obsluga algorytmu, czyli petle zamieniajace kolejnosc dzialan
-        cout<<"  Obliczanie kolejnosci. \n";
-        //fdr(TabZadan, kolejnosc, LiczbaZadan);
-        
+        cout<<"  Obliczanie kolejnosci... \n";
+        Zadanie * tab = new Zadanie [LiczbaZadan];
+        fdr(Kolejka, tab);
+        int cmtab = cmaxtab(tab,LiczbaZadan);
+        delete[] tab;
+        cout << "  Czas trwania Cmax: "<<cmtab<<endl;
+        if (cmtab == tablica[iNrPliku-1]){
+            cout << "WARTOSC ZGODNA Z ZALOZONA\n";
+        }else{
+            cout << "!!!\tWARTOSCI NIEZGODNE Z ZALOZONYMI\t!!!";
+        }
         // wyswietlenie kolejnosci:
-        cout << endl << "Wyliczona kolejnosc: ";
-        WyswietlKolejke(Kolejka);
-        int cm = cmax(Kolejka);
-        
-        cout << endl << "Czas Cmax: " << cm << endl;
+        //cout << endl << "Wyliczona kolejnosc: ";
+        //WyswietlKolejke(Kolejka);
 
         // zapis do pliku
         string fname = "out";
@@ -261,7 +198,7 @@ int main(){
         fname.append(".txt");
         FILE *fp = fopen(fname.c_str(),"w");
         if (fp){
-            fprintf(fp,"%d\n", cm);
+            fprintf(fp,"%d\n", cmtab);
             fclose(fp);
             cout << "Plik zostal zapisany.\n";
         }else {

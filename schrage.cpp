@@ -115,7 +115,8 @@ void fdr(KolejkaZadan kp, Zadanie *tab){
         while((!kp.empty()) && (kp.top().r <= t)){
             e = kp.top();
             kp.pop();
-            kg.push(e);  
+            kg.push(e);
+            //cout << " t1: " << t << "\t ";  
         }
         if (kg.empty()){
             t = kp.top().r;
